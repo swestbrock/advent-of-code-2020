@@ -36,6 +36,8 @@ local function find_pair(array)
     return nil
 end
 
+io.write("Advent of code 2020 - day 1\n")
+
 local array = get_lines("input.txt")
 local pair = find_pair(array)
 
