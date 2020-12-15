@@ -18,28 +18,47 @@ local function get_lines(input)
 end
 
 --[[
-    Check if password is valid.
+    Check if password is valid (first half).
 ]]--
-local function check_valid(str)
+local function check_old_policy(str)
     local is_valid = false
     local str_ = str:gsub(" ","")
     local minmax = str_:match("%d+%p%d+")
-    local min = minmax:match("%d+%p")
-    local max = minmax:match("%p%d+")
-    local letter = str_:match("%l%p")
+    local min = tonumber(minmax:match("%d+%p"):match("%d+"))
+    local max = tonumber(minmax:match("%p%d+"):match("%d+"))
+    local letter = str_:match("%l%p"):match("%l")
     local pw = str_:match("%p%l+")
     local cnt = 0
     -- Count letter occurance
     for c in pw:gmatch("%l") do
-        if c == letter:match("%l") then
+        if c == letter then
             cnt = cnt + 1
         end
     end
     -- Check number of letters
-    if cnt >= tonumber(min:match("%d+")) then
-        if cnt <= tonumber(max:match("%d+")) then
+    if cnt >= min then
+        if cnt <= max then
             is_valid = true;
         end
+    end
+    return is_valid
+end
+
+local function check_new_policy(str)
+    local is_valid = false
+    local str_ = str:gsub(" ","")
+    local positions = str_:match("%d+%p%d+")
+    local pos1 = tonumber(positions:match("%d+%p"):match("%d+"))
+    local pos2 = tonumber(positions:match("%p%d+"):match("%d+"))
+    local letter = str_:match("%l%p"):match("%l")
+    local pw = str_:match("%p%l+"):match("%l+")
+    -- Check letter occurance
+    if letter:byte() == pw:byte(pos1) and
+        letter:byte() ~= pw:byte(pos2) then
+        is_valid = true
+    elseif letter:byte() ~= pw:byte(pos1) and
+        letter:byte() == pw:byte(pos2) then
+        is_valid = true
     end
     return is_valid
 end
@@ -50,8 +69,18 @@ end
 local function find_valids(array)
     local cnt = 0
     for _,v in ipairs(array) do
-        if check_valid(v) then
-            cnt = cnt + 1
+        if arg[1] == "-o" then
+            if check_old_policy(v) then
+                cnt = cnt + 1
+            end
+        elseif arg[1] == "-n"  then
+            if check_new_policy(v) then
+                cnt = cnt + 1
+            end
+        else
+            if check_old_policy(v) then
+                cnt = cnt + 1
+            end
         end
     end
     return cnt
